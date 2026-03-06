@@ -8,86 +8,60 @@
 body{
 margin:0;
 font-family:Arial;
-background:#202020;
+background:#222;
 color:white;
 }
 
-#ui{
+#panel{
 position:absolute;
 top:10px;
 left:10px;
-width:340px;
-background:#2a2a2a;
-padding:15px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.5);
-}
-
-h2{
-margin-top:0;
+width:320px;
+background:#333;
+padding:12px;
+border-radius:8px;
 }
 
 textarea{
 width:100%;
-height:200px;
+height:180px;
 background:#111;
 color:white;
 border:1px solid #555;
-padding:8px;
-resize:none;
 }
 
 button{
 width:100%;
+margin-top:6px;
 padding:10px;
-margin-top:8px;
-border:none;
-border-radius:6px;
-background:#4CAF50;
-color:white;
-font-size:16px;
+font-size:15px;
 cursor:pointer;
-}
-
-button:hover{
-background:#45a049;
-}
-
-#help{
-font-size:12px;
-margin-top:8px;
-color:#ccc;
 }
 </style>
 </head>
 
 <body>
 
-<div id="ui">
-<h2>Simple 3D Model Viewer</h2>
+<div id="panel">
+<h3>OBJ Viewer</h3>
 
-<p>1. Paste your OBJ model below.</p>
-<p>2. Press "Load Model".</p>
+<p>Paste OBJ model text below:</p>
 
-<textarea id="objText">
-# paste OBJ model here
+<textarea id="objInput">
+# paste OBJ here
 </textarea>
 
-<button onclick="loadOBJ()">Load Model</button>
-<button onclick="resetView()">Reset Camera</button>
+<button onclick="loadModel()">Load Model</button>
+<button onclick="resetCamera()">Reset View</button>
 
-<div id="help">
-Mouse: drag = rotate<br>
-Scroll = zoom
+<p>Mouse drag = rotate<br>Scroll = zoom</p>
 </div>
 
-</div>
+<script type="module">
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-<script>
+import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+import { OBJLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/OBJLoader.js";
+import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
 let scene = new THREE.Scene();
 scene.background = new THREE.Color(0x303030);
@@ -105,48 +79,45 @@ let renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth,window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-let controls = new THREE.OrbitControls(camera,renderer.domElement);
+let controls = new OrbitControls(camera,renderer.domElement);
 
 let light = new THREE.DirectionalLight(0xffffff,1);
 light.position.set(5,10,7);
 scene.add(light);
 
-let ambient = new THREE.AmbientLight(0xffffff,0.6);
-scene.add(ambient);
-
-let grid = new THREE.GridHelper(20,20);
-scene.add(grid);
+scene.add(new THREE.AmbientLight(0xffffff,0.5));
+scene.add(new THREE.GridHelper(20,20));
 
 let currentModel;
 
-function loadOBJ(){
+window.loadModel = function(){
 
-let text = document.getElementById("objText").value;
+let text = document.getElementById("objInput").value;
 
 try{
 
-let loader = new THREE.OBJLoader();
+let loader = new OBJLoader();
 let obj = loader.parse(text);
 
-if(currentModel){
-scene.remove(currentModel);
-}
+if(currentModel) scene.remove(currentModel);
 
 currentModel = obj;
 scene.add(obj);
 
-}catch(e){
+}catch(err){
 
-alert("Model failed to load. Make sure it is valid OBJ text.");
-
-}
+alert("OBJ failed to load.");
 
 }
 
-function resetView(){
+};
+
+window.resetCamera = function(){
+
 camera.position.set(3,2,5);
 controls.update();
-}
+
+};
 
 function animate(){
 requestAnimationFrame(animate);
