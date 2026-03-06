@@ -2,93 +2,160 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>OBJ Viewer</title>
+<title>Easy OBJ Viewer</title>
+
 <style>
-body { margin:0; background:#111; color:white; font-family:sans-serif; }
-#panel {
-  position:absolute;
-  top:10px;
-  left:10px;
-  width:300px;
-  background:#222;
-  padding:10px;
-  border-radius:8px;
+body{
+margin:0;
+font-family:Arial;
+background:#202020;
+color:white;
 }
-textarea { width:100%; height:180px; }
-button { width:100%; margin-top:6px; padding:8px; }
+
+#ui{
+position:absolute;
+top:10px;
+left:10px;
+width:340px;
+background:#2a2a2a;
+padding:15px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+
+h2{
+margin-top:0;
+}
+
+textarea{
+width:100%;
+height:200px;
+background:#111;
+color:white;
+border:1px solid #555;
+padding:8px;
+resize:none;
+}
+
+button{
+width:100%;
+padding:10px;
+margin-top:8px;
+border:none;
+border-radius:6px;
+background:#4CAF50;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#45a049;
+}
+
+#help{
+font-size:12px;
+margin-top:8px;
+color:#ccc;
+}
 </style>
 </head>
+
 <body>
 
-<div id="panel">
-<h3>OBJ Viewer</h3>
-<textarea id="objInput">
+<div id="ui">
+<h2>Simple 3D Model Viewer</h2>
+
+<p>1. Paste your OBJ model below.</p>
+<p>2. Press "Load Model".</p>
+
+<textarea id="objText">
 # paste OBJ model here
 </textarea>
+
 <button onclick="loadOBJ()">Load Model</button>
+<button onclick="resetView()">Reset Camera</button>
+
+<div id="help">
+Mouse: drag = rotate<br>
+Scroll = zoom
 </div>
 
-<script type="module">
+</div>
 
-import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
-import { OBJLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/OBJLoader.js";
-import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x202020);
+<script>
 
-const camera = new THREE.PerspectiveCamera(
+let scene = new THREE.Scene();
+scene.background = new THREE.Color(0x303030);
+
+let camera = new THREE.PerspectiveCamera(
 75,
-window.innerWidth / window.innerHeight,
+window.innerWidth/window.innerHeight,
 0.1,
 1000
 );
-camera.position.set(3,3,5);
 
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
+camera.position.set(3,2,5);
+
+let renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const controls = new OrbitControls(camera, renderer.domElement);
+let controls = new THREE.OrbitControls(camera,renderer.domElement);
 
-const light = new THREE.DirectionalLight(0xffffff,1);
-light.position.set(5,5,5);
+let light = new THREE.DirectionalLight(0xffffff,1);
+light.position.set(5,10,7);
 scene.add(light);
 
-const ambient = new THREE.AmbientLight(0xffffff,0.5);
+let ambient = new THREE.AmbientLight(0xffffff,0.6);
 scene.add(ambient);
+
+let grid = new THREE.GridHelper(20,20);
+scene.add(grid);
 
 let currentModel;
 
-window.loadOBJ = function(){
+function loadOBJ(){
 
-const text = document.getElementById("objInput").value;
+let text = document.getElementById("objText").value;
 
-const loader = new OBJLoader();
-const object = loader.parse(text);
+try{
 
-if(currentModel) scene.remove(currentModel);
+let loader = new THREE.OBJLoader();
+let obj = loader.parse(text);
 
-currentModel = object;
-scene.add(object);
+if(currentModel){
+scene.remove(currentModel);
+}
 
-};
+currentModel = obj;
+scene.add(obj);
+
+}catch(e){
+
+alert("Model failed to load. Make sure it is valid OBJ text.");
+
+}
+
+}
+
+function resetView(){
+camera.position.set(3,2,5);
+controls.update();
+}
 
 function animate(){
 requestAnimationFrame(animate);
-controls.update();
 renderer.render(scene,camera);
 }
 
 animate();
 
-window.addEventListener("resize", () => {
-camera.aspect = window.innerWidth / window.innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
 </script>
 
 </body>
-</html>s
+</html>
